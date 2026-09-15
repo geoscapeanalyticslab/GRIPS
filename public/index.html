@@ -262,6 +262,7 @@ mark{background:var(--accent-glow); color:var(--accent-dim); border-radius:3px; 
 footer{max-width:none; margin:0; padding:20px clamp(16px,3vw,40px) 30px; color:var(--muted); font-family:'IBM Plex Mono', monospace; font-size:11px; text-align:center;}
 footer a{color:var(--accent); text-decoration:none; font-weight:600;}
 footer a:hover{text-decoration:underline;}
+.footer-feedback{margin-bottom:9px; font-size:12.5px; font-family:inherit;}
 
 .fab-report{position:fixed; bottom:22px; left:22px; z-index:65; background:var(--panel); color:var(--text);
   border:1px solid var(--line); border-radius:24px; padding:11px 18px 11px 15px; font-size:13px; font-weight:600;
@@ -577,7 +578,10 @@ footer a:hover{text-decoration:underline;}
 
 </main>
 
-<footer>GRIPS · a project of <a href="https://geoscapeanalyticslab.github.io/?p=projects" target="_blank" rel="noopener noreferrer">GeoScape Analytics Lab (GSAL)</a> · data via OpenAlex, Semantic Scholar, CrossRef, arXiv &amp; more · Made in Pakistan</footer>
+<footer>
+  <div class="footer-feedback">Found a problem, a missing paper, or have a suggestion? <a href="mailto:geoscapeanalyticslab@gmail.com?subject=GRIPS%20Feedback%20%2F%20Issue">Email us at geoscapeanalyticslab@gmail.com</a></div>
+  GRIPS · a project of <a href="https://geoscapeanalyticslab.github.io/?p=projects" target="_blank" rel="noopener noreferrer">GeoScape Analytics Lab (GSAL)</a> · data via OpenAlex, Semantic Scholar, CrossRef, arXiv &amp; more · Made in Pakistan
+</footer>
 
 <button class="fab-report" id="fabReport"><svg class="icon" style="width:15px;height:15px;"><use href="#i-alert"/></svg>Report an issue</button>
 <div class="toast" id="toast"></div>
@@ -587,6 +591,8 @@ footer a:hover{text-decoration:underline;}
 </div>
 
 <script>
+/* One-time migration: carry saved data from old talaashgis_* keys to grips_* (safe to keep; runs once) */
+(function(){try{var m={talaashgis_reports:'grips_reports',talaashgis_bookmarks:'grips_bookmarks',talaashgis_history:'grips_history',talaashgis_synccode:'grips_synccode',talaashgis_seen_coach:'grips_seen_coach'};for(var k in m){var ov=localStorage.getItem(k);if(ov!==null){if(localStorage.getItem(m[k])===null){localStorage.setItem(m[k],ov);}localStorage.removeItem(k);}}}catch(e){}})();
 /* ================= THEME ================= */
 const themeBtn = document.getElementById('themeBtn');
 function applyTheme(t){
@@ -742,12 +748,12 @@ function showGeneralReportModal(){
 }
 document.getElementById('fabReport').addEventListener('click', showGeneralReportModal);
 
-function getReports(){ try{ return JSON.parse(localStorage.getItem('talaashgis_reports') || '[]'); }catch(e){ return []; } }
+function getReports(){ try{ return JSON.parse(localStorage.getItem('grips_reports') || '[]'); }catch(e){ return []; } }
 function saveReport(paper, reason, comment){
   const list = getReports();
   const entry = { title: paper.title, doi: paper.doi || '', reason, comment, t: new Date().toLocaleString() };
   list.unshift(entry);
-  localStorage.setItem('talaashgis_reports', JSON.stringify(list.slice(0,200)));
+  localStorage.setItem('grips_reports', JSON.stringify(list.slice(0,200)));
   // Mirror to the backend so reports are visible from any device / by anyone
   // with the sync code — fire-and-forget, never blocks the UI.
   fetch('/api/reports', {
@@ -815,10 +821,10 @@ function isReputed(venue){
 // and stored locally. Entering the same code in the app on another device
 // pulls that device's bookmarks/history/reports down — no email/password system.
 function getSyncCode(){
-  let code = localStorage.getItem('talaashgis_synccode');
+  let code = localStorage.getItem('grips_synccode');
   if(!code){
     code = Math.random().toString(36).slice(2, 6) + Math.random().toString(36).slice(2, 6);
-    localStorage.setItem('talaashgis_synccode', code);
+    localStorage.setItem('grips_synccode', code);
   }
   return code;
 }
@@ -833,18 +839,18 @@ async function pullFromCloud(code){
   const bmData = await bmRes.json();
   const histData = await histRes.json();
   const repData = await repRes.json();
-  localStorage.setItem('talaashgis_bookmarks', JSON.stringify(bmData.bookmarks || []));
-  localStorage.setItem('talaashgis_history', JSON.stringify(histData.history || []));
-  localStorage.setItem('talaashgis_reports', JSON.stringify((repData.reports || []).map(r => ({
+  localStorage.setItem('grips_bookmarks', JSON.stringify(bmData.bookmarks || []));
+  localStorage.setItem('grips_history', JSON.stringify(histData.history || []));
+  localStorage.setItem('grips_reports', JSON.stringify((repData.reports || []).map(r => ({
     title: r.title, doi: r.doi, reason: r.reason, comment: r.comment, t: new Date(r.t).toLocaleString()
   }))));
-  localStorage.setItem('talaashgis_synccode', syncCode);
+  localStorage.setItem('grips_synccode', syncCode);
   updateBmCount();
 }
 
 /* ================= STORAGE ================= */
-function getBookmarks(){ try{ return JSON.parse(localStorage.getItem('talaashgis_bookmarks') || '[]'); }catch(e){ return []; } }
-function setBookmarks(list){ localStorage.setItem('talaashgis_bookmarks', JSON.stringify(list)); updateBmCount(); }
+function getBookmarks(){ try{ return JSON.parse(localStorage.getItem('grips_bookmarks') || '[]'); }catch(e){ return []; } }
+function setBookmarks(list){ localStorage.setItem('grips_bookmarks', JSON.stringify(list)); updateBmCount(); }
 function isBookmarked(key){ return getBookmarks().some(p => p.key === key); }
 function getCollectionNames(){
   const list = getBookmarks();
@@ -872,11 +878,11 @@ function removeBookmark(key){
 function updateBmCount(){ document.getElementById('bmCount').textContent = getBookmarks().length; }
 updateBmCount();
 
-function getHistory(){ try{ return JSON.parse(localStorage.getItem('talaashgis_history') || '[]'); }catch(e){ return []; } }
+function getHistory(){ try{ return JSON.parse(localStorage.getItem('grips_history') || '[]'); }catch(e){ return []; } }
 function addHistory(entry){
   const list = getHistory();
   list.unshift(entry);
-  localStorage.setItem('talaashgis_history', JSON.stringify(list.slice(0,40)));
+  localStorage.setItem('grips_history', JSON.stringify(list.slice(0,40)));
   fetch('/api/history', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ syncCode: getSyncCode(), entry })
@@ -1281,12 +1287,12 @@ document.getElementById('exportCsv').addEventListener('click', () => {
   const rows = [['Title','Authors','Year','Venue','Citations','DOI/URL','Source']];
   currentPapers.forEach(p => rows.push([p.title, p.authors, p.year, p.venue, p.citations, p.url || (p.doi?('https://doi.org/'+p.doi):''), p.source]));
   const csv = rows.map(r => r.map(c => `"${(c==null?'':String(c)).replace(/"/g,'""')}"`).join(',')).join('\n');
-  downloadFile('talaashgis_results.csv', csv, 'text/csv');
+  downloadFile('grips_results.csv', csv, 'text/csv');
   toast('CSV downloaded');
 });
 document.getElementById('exportBib').addEventListener('click', () => {
   const bib = currentPapers.map(p => citationBibtex(p)).join('\n\n');
-  downloadFile('talaashgis_results.bib', bib, 'application/x-bibtex');
+  downloadFile('grips_results.bib', bib, 'application/x-bibtex');
   toast('BibTeX file downloaded');
 });
 
@@ -1390,7 +1396,7 @@ function renderHistory(){
   });
 }
 document.getElementById('clearHistory').addEventListener('click', () => {
-  localStorage.setItem('talaashgis_history','[]');
+  localStorage.setItem('grips_history','[]');
   renderHistory();
   toast('History cleared');
 });
@@ -1418,7 +1424,7 @@ document.getElementById('copyReports').addEventListener('click', () => {
   navigator.clipboard.writeText(body).then(() => toast('Reports copied to clipboard')).catch(() => toast('Copy failed'));
 });
 document.getElementById('clearReports').addEventListener('click', () => {
-  localStorage.setItem('talaashgis_reports','[]');
+  localStorage.setItem('grips_reports','[]');
   renderReports();
   toast('Reports cleared (local + synced copy)');
   const syncCode = getSyncCode();
@@ -1498,7 +1504,7 @@ async function reviewBlocklistEntry(key, status){
 document.getElementById('refreshBlocklist').addEventListener('click', loadPendingBlocklist);
 
 /* ================= ONBOARDING COACH MARK ================= */
-if(!localStorage.getItem('talaashgis_seen_coach')){
+if(!localStorage.getItem('grips_seen_coach')){
   setTimeout(() => {
     const field = document.querySelector('.search-panel .row');
     const coach = document.createElement('div');
@@ -1510,7 +1516,7 @@ if(!localStorage.getItem('talaashgis_seen_coach')){
     document.querySelector('.search-panel').appendChild(coach);
     document.getElementById('coachOk').addEventListener('click', () => {
       coach.remove();
-      localStorage.setItem('talaashgis_seen_coach', '1');
+      localStorage.setItem('grips_seen_coach', '1');
     });
   }, 2000);
 }
