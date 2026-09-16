@@ -18,7 +18,7 @@
 :root{
   --bg:#F7F8FA; --bg-2:#EFF2F6; --panel:#FFFFFF; --panel-2:#F4F6F9; --panel-glass:rgba(255,255,255,0.88);
   --line:#E3E7EC; --line-soft:#EDF0F4;
-  --text:#1F2733; --text-dim:#4A5563; --muted:#6B7480; --muted-2:#9AA3AF;
+  --text:#111418; --text-dim:#2F3640; --muted:#586173; --muted-2:#8A94A2;
   --accent:#3E6EA6; --accent-dim:#31597F; --accent-glow:rgba(62,110,166,0.12); --on-accent:#FFFFFF;
   --accent-2:#6E7B8A; --warn:#B06A4A; --danger:#B23B2E;
   --radius:16px; --radius-sm:11px;
@@ -543,6 +543,11 @@ footer a:hover{text-decoration:underline;}
       <h3><svg class="icon"><use href="#i-globe"/></svg> About GRIPS</h3>
       <p>GRIPS (Geospatial Research Index of Pakistan Studies) is a free literature-discovery tool built for Pakistani GIS, remote sensing, earth &amp; environmental science, geography, and space science researchers and students. Give it keywords and a year (or year range), and it pulls live results from open academic databases, no login, no paywall to search.</p>
     </div>
+    <div class="about-card" id="about-gsal">
+      <h3><svg class="icon"><use href="#i-globe"/></svg> About GeoScape Analytics Lab (GSAL)</h3>
+      <p>GRIPS is a project of <strong>GeoScape Analytics Lab (GSAL)</strong>, an independent geospatial research lab based in Lahore, Pakistan. GSAL specializes in advanced geospatial technologies &mdash; applying GIS, remote sensing, artificial intelligence, and spatial data analytics to real-world challenges in environmental management, urban planning, agriculture, and climate.</p>
+      <p>Its mission is to bridge cutting-edge geotechnology with practical, on-the-ground applications that support sustainable development across Pakistan and South Asia. Learn more at <a href="https://geoscapeanalyticslab.github.io/" target="_blank" rel="noopener noreferrer">geoscapeanalyticslab.github.io</a>.</p>
+    </div>
     <div class="about-card" id="about-sources">
       <h3><svg class="icon"><use href="#i-inbox"/></svg> Data Sources</h3>
       <p>Results are merged and de-duplicated (by DOI first, then title) from multiple sources in real time: <strong>OpenAlex</strong>, <strong>Semantic Scholar</strong>, <strong>CrossRef</strong>, and <strong>arXiv</strong> (preprints) always; plus <strong>Springer Nature</strong> (including Nature-family journals), <strong>CORE</strong>, <strong>Elsevier/ScienceDirect</strong>, <strong>IEEE Xplore</strong>, and <strong>NASA ADS</strong> (astronomy/astrophysics/planetary/space science) when their API keys are configured on the backend. <strong>Unpaywall</strong> is also checked for papers that aren't already flagged open access, to surface a free full-text link where one genuinely exists.</p>
@@ -1060,6 +1065,31 @@ function getHighlightWords(rawKw){
   return (rawKw||'').toLowerCase().replace(/["']/g,'').split(/\s+/).filter(w => w.length > 1 && !STOPWORDS.has(w) && !/^(19|20)\d{2}$/.test(w));
 }
 
+/* ===== "Did you mean" — spell suggestion over a small domain vocabulary ===== */
+const SEARCH_VOCAB = ['climate','change','flood','flooding','mapping','glacier','glacial','melting','retreat','urban','heat','island','groundwater','depletion','land','cover','use','landslide','susceptibility','seismic','hazard','earthquake','satellite','agriculture','agricultural','monitoring','remote','sensing','geography','geospatial','drought','rainfall','precipitation','temperature','deforestation','forest','vegetation','soil','erosion','moisture','water','quality','river','indus','watershed','hydrology','snow','avalanche','lake','outburst','spatial','imagery','sentinel','landsat','elevation','terrain','pakistan','pakistani','punjab','sindh','balochistan','karachi','lahore','islamabad','peshawar','quetta','multan','faisalabad','rawalpindi','gilgit','baltistan','kashmir','himalaya','himalayan','karakoram','environmental','pollution','carbon','emissions','ecosystem','biodiversity','wetland','coastal','delta','mangrove','desertification','crop','wheat','rice','cotton','yield','population','urbanization','disaster','risk','vulnerability','assessment','modeling','classification','detection','aerosol','ozone','aquifer','salinity','irrigation','mapping'];
+function editDistance(a,b){
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,j)=>j), cur=new Array(n+1);
+  for(let i=1;i<=m;i++){ cur[0]=i;
+    for(let j=1;j<=n;j++){ cur[j]=a[i-1]===b[j-1]?prev[j-1]:1+Math.min(prev[j-1],prev[j],cur[j-1]); }
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+function closestVocab(word){
+  if(word.length<3 || SEARCH_VOCAB.includes(word)) return null;
+  const maxD = word.length<=5 ? 1 : 2;
+  let best=null,bestD=Infinity;
+  for(const v of SEARCH_VOCAB){ if(Math.abs(v.length-word.length)>maxD) continue; const d=editDistance(word,v); if(d<bestD){bestD=d;best=v;} }
+  return (best && bestD>0 && bestD<=maxD) ? best : null;
+}
+function didYouMean(rawKw){
+  const tokens=(rawKw||'').toLowerCase().split(/\s+/).filter(Boolean);
+  let changed=false;
+  const fixed=tokens.map(t=>{ const clean=t.replace(/[^a-z]/g,''); if(!clean) return t; const sug=closestVocab(clean); if(sug){changed=true; return t.replace(clean,sug);} return t; });
+  return changed ? fixed.join(' ') : null;
+}
+
 function updateCrossLinks(){
   const kw = kwInput.value.trim();
   const q = currentScope === 'pk' && kw && !mentionsPakistan(kw) ? `${kw} Pakistan` : kw;
@@ -1215,11 +1245,15 @@ async function runSearch(fromHistory){
     if(batch.length === 0){
       statusEl.textContent = `0 results for "${kw}"${yrRaw ? ' in ' + yrRaw : ''}${currentScope==='pk' ? ' (Pakistan-focused)' : ''}.`;
       exportRow.style.display = 'none';
+      const dym = didYouMean(kw);
+      const dymHtml = dym ? `<div style="margin-top:12px; font-size:15px;">Did you mean: <a href="#" id="dymLink" style="color:var(--accent); font-weight:700; text-decoration:underline;">${escapeHtml(dym)}</a>?</div>` : '';
       const suggestion = currentScope === 'pk'
         ? 'Please double-check your spelling, or try broader / different keywords. You can also switch to Global scope above to search worldwide.'
         : 'Please double-check your spelling, or try broader / different keywords.';
-      resultsEl.innerHTML = `<div class="empty"><svg><use href="#i-alert"/></svg><div class="big">No results — check your spelling</div>${suggestion}</div>`;
-      toast('No results — please double-check your spelling');
+      resultsEl.innerHTML = `<div class="empty"><svg><use href="#i-alert"/></svg><div class="big">No results — check your spelling</div>${suggestion}${dymHtml}</div>`;
+      toast(dym ? `Did you mean "${dym}"?` : 'No results — please double-check your spelling');
+      const dl = document.getElementById('dymLink');
+      if(dl) dl.addEventListener('click', e => { e.preventDefault(); kwInput.value = dym; runSearch(false); });
       return;
     }
 
@@ -1268,7 +1302,7 @@ function renderResults(noticeHtml){
   const view = currentPapers.slice();
   if(sortKey === 'citations') view.sort((a,b) => (b.citations||0) - (a.citations||0) || a._ord - b._ord);
   else if(sortKey === 'year') view.sort((a,b) => (b.year||0) - (a.year||0) || a._ord - b._ord);
-  else view.sort((a,b) => a._ord - b._ord);
+  else view.sort((a,b) => ((b.authors||b.abstract?1:0) - (a.authors||a.abstract?1:0)) || a._ord - b._ord);
   renderChart(currentPapers);
   resultsEl.innerHTML = (noticeHtml || '') + view.map(pp => renderCard(pp, false, getHighlightWords(searchState.displayKw))).join('');
   attachCardHandlers(resultsEl, view);
@@ -1276,10 +1310,9 @@ function renderResults(noticeHtml){
 }
 
 function renderCard(p, showRemove, highlightWords){
-  const authors = p.authors || 'Unknown authors';
   const link = p.url || p.oaUrl || (p.doi ? `https://doi.org/${p.doi}` : null);
-  const abstractEscaped = p.abstract ? escapeHtml(p.abstract) : 'No abstract available.';
-  const abstract = p.abstract ? highlightAll(abstractEscaped, highlightWords) : abstractEscaped;
+  const authorsHtml = p.authors ? `<div class="authors">${escapeHtml(p.authors)}</div>` : '';
+  const abstractHtml = p.abstract ? `<div class="abstract">${highlightAll(escapeHtml(p.abstract), highlightWords)}</div>` : '';
   const titleEscaped = escapeHtml(p.title);
   const titleHtml = highlightAll(titleEscaped, highlightWords);
   const bookmarked = isBookmarked(p.key);
@@ -1297,8 +1330,8 @@ function renderCard(p, showRemove, highlightWords){
         ${showRemove && p.collection ? `<span class="collection-tag">${escapeHtml(p.collection)}</span>` : ''}
       </div>
       <h3>${link ? `<a href="${link}" target="_blank" rel="noopener">${titleHtml}</a>` : titleHtml}</h3>
-      <div class="authors">${escapeHtml(authors)}</div>
-      <div class="abstract">${abstract}</div>
+      ${authorsHtml}
+      ${abstractHtml}
       ${showRemove && p.note ? `<div class="note">${escapeHtml(p.note)}</div>` : ''}
       <div class="actions">
         ${link ? `<a href="${link}" target="_blank" rel="noopener"><svg class="icon"><use href="#i-external"/></svg>Open</a>` : ''}
