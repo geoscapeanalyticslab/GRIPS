@@ -1,4 +1,4 @@
-const CACHE = 'grips-shell-v15';
+const CACHE = 'grips-shell-v16';
 const SHELL_FILES = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', event => {
