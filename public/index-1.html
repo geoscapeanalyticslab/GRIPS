@@ -7,8 +7,8 @@
 <meta name="theme-color" content="#F7F8FA">
 <meta name="description" content="Pakistan-focused search tool for GIS, remote sensing, earth &amp; environmental science, geography and space science research papers, by keyword and year.">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="fav.png">
+<link rel="apple-touch-icon" href="fav.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GRIPS">
@@ -37,9 +37,9 @@
   --shadow-glow:0 0 0 1px rgba(226,172,85,0.18), 0 10px 30px rgba(226,172,85,0.10);
 }
 *{box-sizing:border-box;}
-html,body{margin:0; height:100%; scroll-behavior:smooth;}
+html{scroll-behavior:smooth;}
 body{
-  background:var(--bg);
+  margin:0; background:var(--bg);
   color:var(--text); font-family:'Inter', sans-serif; min-height:100vh;
   transition:background .25s, color .25s;
   -webkit-font-smoothing:antialiased;
@@ -386,19 +386,10 @@ footer a:hover{text-decoration:underline;}
 
 <header>
   <div class="headrow">
-    <div class="logo">
-      <svg class="logo-mark" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" style="color:var(--line)" stroke-width="3"/>
-        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="80 250" stroke-linecap="round"/>
-        <circle cx="50" cy="50" r="6" fill="var(--accent)"/>
-        <circle cx="78" cy="28" r="4" fill="var(--accent-2)"/>
-      </svg>
-      <div class="logo-text">
-        <div class="name"><span class="hl">GRIPS</span></div>
-        <div class="full">Geospatial Research Index of Pakistan Studies</div>
-        <div class="sub">SEARCH · SCAN · CITE</div>
-      </div>
-    </div>
+    <a href="#view-search" class="logo" aria-label="GRIPS Home" onclick="document.querySelector('nav.tabs button[data-view=\"search\"]').click(); window.scrollTo({top:0,behavior:'smooth'}); return false;">
+      <img src="grips-logo.png" class="header-logo light-logo" alt="GRIPS — Geospatial Research Index of Pakistan Studies">
+      <img src="grips-logo.png" class="header-logo dark-logo" alt="GRIPS — Geospatial Research Index of Pakistan Studies">
+    </a>
     <div class="headright">
       <nav class="tabs" role="tablist">
         <button data-view="search" class="active" role="tab"><svg class="icon"><use href="#i-search"/></svg> Search</button>
@@ -417,19 +408,12 @@ footer a:hover{text-decoration:underline;}
 
   <!-- SEARCH VIEW -->
   <section class="view active" id="view-search">
-    <div class="hero">
+<div class="hero">
       <div class="hero-text">
-        <h2>Find research that matters, fast.</h2>
-        <p>Search live GIS, remote sensing, earth &amp; environmental science, geography, and space science literature, locked to Pakistan-specific results by default.</p>
+        <h2>Find research that matters, fast.<img src="fav.png" alt="" style="width:28px;height:28px;vertical-align:middle;margin-left:8px;border-radius:6px;"></h2>
+        <p>Search live GIS, remote sensing, earth & environmental science, geography, and space science literature, locked to Pakistan-specific results by default.</p>
       </div>
-      <div class="hero-badge">
-        <svg viewBox="0 0 100 100" class="hero-mark">
-          <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="4"/>
-          <circle cx="50" cy="50" r="40" fill="none" stroke="var(--accent)" stroke-width="4" stroke-dasharray="90 251" stroke-linecap="round"/>
-          <circle cx="50" cy="50" r="40" fill="none" stroke="var(--accent-2)" stroke-width="4" stroke-dasharray="35 251" stroke-dashoffset="-95" stroke-linecap="round"/>
-          <circle cx="50" cy="50" r="9" fill="var(--accent)"/>
-        </svg>
-      </div>
+    </div>
     </div>
     <div class="search-panel">
       <div class="scope-toggle" id="scopeToggle">
