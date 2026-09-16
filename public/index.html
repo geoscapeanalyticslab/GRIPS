@@ -18,7 +18,7 @@
 :root{
   --bg:#F7F8FA; --bg-2:#EFF2F6; --panel:#FFFFFF; --panel-2:#F4F6F9; --panel-glass:rgba(255,255,255,0.88);
   --line:#E3E7EC; --line-soft:#EDF0F4;
-  --text:#111418; --text-dim:#2F3640; --muted:#586173; --muted-2:#8A94A2;
+  --text:#0A0B0D; --text-dim:#1E232B; --muted:#525C6B; --muted-2:#8A94A2;
   --accent:#3E6EA6; --accent-dim:#31597F; --accent-glow:rgba(62,110,166,0.12); --on-accent:#FFFFFF;
   --accent-2:#6E7B8A; --warn:#B06A4A; --danger:#B23B2E;
   --radius:16px; --radius-sm:11px;
@@ -78,6 +78,11 @@ header{position:sticky; top:0; z-index:20; background:var(--panel-glass); backdr
 .headrow{max-width:none; margin:0; display:flex; align-items:center; justify-content:space-between; gap:12px;}
 .logo{display:flex; align-items:center; gap:11px;}
 .logo-mark{width:34px; height:34px; flex-shrink:0;}
+.header-logo{height:54px; width:auto; display:block;}
+.dark-logo{display:none;}
+[data-theme="dark"] .light-logo{display:none;}
+[data-theme="dark"] .dark-logo{display:block;}
+@media (max-width:600px){ .header-logo{height:42px;} }
 .logo-text{line-height:1.2;}
 .logo-text .name{font-family:'Times New Roman', Times, serif; font-weight:700; font-size:28px; letter-spacing:0; line-height:1.05;}
 .logo-text .name .hl{color:var(--accent);}
@@ -387,17 +392,8 @@ footer a:hover{text-decoration:underline;}
 <header>
   <div class="headrow">
     <div class="logo">
-      <svg class="logo-mark" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" style="color:var(--line)" stroke-width="3"/>
-        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="80 250" stroke-linecap="round"/>
-        <circle cx="50" cy="50" r="6" fill="var(--accent)"/>
-        <circle cx="78" cy="28" r="4" fill="var(--accent-2)"/>
-      </svg>
-      <div class="logo-text">
-        <div class="name"><span class="hl">GRIPS</span></div>
-        <div class="full">Geospatial Research Index of Pakistan Studies</div>
-        <div class="sub">SEARCH · SCAN · CITE</div>
-      </div>
+      <img src="grips-logo.svg" class="header-logo light-logo" alt="GRIPS — Geospatial Research Index of Pakistan Studies">
+      <img src="grips-logo-dark.svg" class="header-logo dark-logo" alt="GRIPS — Geospatial Research Index of Pakistan Studies">
     </div>
     <div class="headright">
       <nav class="tabs" role="tablist">
@@ -560,7 +556,7 @@ footer a:hover{text-decoration:underline;}
       <p>Your search keyword is sent to every source as plain text, no quote-wrapping, no forced extra words, to get the widest possible set of candidates back. Every one of those candidates is then required to actually contain each of your topic's words in its own title/abstract/venue (not just something the upstream API's fuzzy ranking thought was "close enough"), so nothing off-topic survives regardless of how loose the initial search was.</p>
       <p>Region names that Pakistan shares with other countries, "Punjab" (also an Indian state) and "Balochistan/Baluchestan" (also spans Iran), are treated carefully: a match on one of these alone is discarded if the same paper also names a different specific country (India, Iran, etc.) without any Pakistan-unique term to outweigh it. The same conflicting-country check applies to the institution-affiliation signal too, so a Pakistani-affiliated author's paper about a different country's case study won't get pulled in either.</p>
       <p>Switch to <strong>Global</strong> scope (toggle above the search box) to search worldwide without any of this filtering.</p>
-      <div class="disclaimer">No automated filter is 100% perfect. If something irrelevant still slips through, use the "Report" button on that result, this is exactly what that feature is for.</div>
+      <div class="disclaimer">No automated filter is 100% perfect. If something irrelevant still slips through, email us via the link in the footer so we can fix it.</div>
     </div>
     <div class="about-card" id="about-reputed">
       <h3><svg class="icon"><use href="#i-star"/></svg> "Reputed Journal" Badge</h3>
@@ -570,21 +566,6 @@ footer a:hover{text-decoration:underline;}
     <div class="about-card">
       <h3><svg class="icon"><use href="#i-folder"/></svg> Collections &amp; Notes</h3>
       <p>Organize saved papers into custom collections (e.g. "Thesis Ch.3", "Literature Review") and attach personal notes to any bookmark. Saved locally for instant access, and mirrored to the backend under your Sync Code so they're recoverable on another device.</p>
-    </div>
-    <div class="about-card">
-      <h3><svg class="icon"><use href="#i-alert"/></svg> My Reports</h3>
-      <p>Issues you've flagged on results (wrong year, not relevant, broken link, etc.) are logged here locally, and also saved to the backend under your Sync Code, so they can be reviewed centrally instead of staying trapped in one browser.</p>
-      <div id="reportsList"></div>
-      <div class="modal-actions" style="justify-content:flex-start; margin-top:10px;">
-        <button class="ghost" id="copyReports"><svg class="icon"><use href="#i-copy"/></svg> Copy all as text</button>
-        <button class="ghost" id="clearReports"><svg class="icon"><use href="#i-trash"/></svg> Clear reports</button>
-      </div>
-    </div>
-    <div class="about-card">
-      <h3><svg class="icon"><use href="#i-check"/></svg> Auto-Blocked Papers</h3>
-      <p>When a specific paper is reported as "Not actually about Pakistan", "Off-topic", or "Duplicate", it's <strong>immediately excluded</strong> from every future search, for everyone, automatically, no manual approval needed. This list shows everything that's been auto-blocked, in case a report was wrong, click "Un-block" to make a paper show up again.</p>
-      <button class="ghost" id="refreshBlocklist" style="margin-bottom:10px;"><svg class="icon"><use href="#i-plus"/></svg> Refresh list</button>
-      <div id="blocklistPending"><p style="color:var(--muted); font-size:13px;">Click "Refresh list" to load.</p></div>
     </div>
     <div class="about-card">
       <h3><svg class="icon"><use href="#i-globe"/></svg> Sync Across Devices</h3>
@@ -661,7 +642,6 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if(btn.dataset.view === 'bookmarks') renderBookmarks();
     if(btn.dataset.view === 'history') renderHistory();
-    if(btn.dataset.view === 'about') renderReports();
   });
 });
 
@@ -1340,7 +1320,6 @@ function renderCard(p, showRemove, highlightWords){
         <button class="cite-bib"><svg class="icon"><use href="#i-copy"/></svg>BibTeX</button>
         ${showRemove ? `<button class="note-btn"><svg class="icon"><use href="#i-note"/></svg>${p.note ? 'Edit note' : 'Add note'}</button>` : ''}
         <button class="star ${bookmarked ? 'active' : ''}"><svg class="icon${bookmarked ? ' fill' : ''}"><use href="#i-star"/></svg>${bookmarked ? 'Saved' : 'Save'}</button>
-        <button class="report-btn" title="Report an issue with this result"><svg class="icon"><use href="#i-alert"/></svg>Report</button>
         ${showRemove ? '<button class="remove"><svg class="icon"><use href="#i-trash"/></svg>Remove</button>' : ''}
       </div>
     </div>
@@ -1534,8 +1513,9 @@ document.getElementById('clearHistory').addEventListener('click', () => {
 
 /* ================= REPORTS VIEW (in About tab) ================= */
 function renderReports(){
-  const list = getReports();
   const el = document.getElementById('reportsList');
+  if(!el) return;
+  const list = getReports();
   if(list.length === 0){
     el.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">No reports yet.</p>`;
     return;
@@ -1549,23 +1529,6 @@ function renderReports(){
     </div>
   `).join('');
 }
-document.getElementById('copyReports').addEventListener('click', () => {
-  const body = emailReportsBody();
-  if(!body){ toast('No reports to copy'); return; }
-  navigator.clipboard.writeText(body).then(() => toast('Reports copied to clipboard')).catch(() => toast('Copy failed'));
-});
-document.getElementById('clearReports').addEventListener('click', () => {
-  localStorage.setItem('grips_reports','[]');
-  renderReports();
-  toast('Reports cleared (local + synced copy)');
-  const syncCode = getSyncCode();
-  fetch(`/api/reports?syncCode=${encodeURIComponent(syncCode)}`)
-    .then(r => r.json())
-    .then(data => Promise.allSettled((data.reports || []).map(r =>
-      fetch(`/api/reports?syncCode=${encodeURIComponent(syncCode)}&id=${encodeURIComponent(r.id)}`, { method: 'DELETE' })
-    )))
-    .catch(() => {});
-});
 
 /* ================= SYNC CODE UI ================= */
 document.getElementById('mySyncCode').textContent = getSyncCode();
@@ -1632,7 +1595,6 @@ async function reviewBlocklistEntry(key, status){
     toast('Could not update: ' + err.message);
   }
 }
-document.getElementById('refreshBlocklist').addEventListener('click', loadPendingBlocklist);
 
 /* ================= ONBOARDING COACH MARK ================= */
 if(!localStorage.getItem('grips_seen_coach')){
