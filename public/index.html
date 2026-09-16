@@ -206,6 +206,11 @@ button.ghost:hover{border-color:var(--accent); color:var(--accent);}
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;}
 mark{background:var(--accent-glow); color:var(--accent-dim); border-radius:3px; padding:0 2px; font-weight:600;}
 [data-theme="dark"] mark{color:var(--accent);}
+mark.pk{background:#0f7b52; color:#fff; border-radius:3px; padding:0 3px; font-weight:700;}
+[data-theme="dark"] mark.pk{background:#1f9d6b; color:#04140d;}
+.year-notice{display:flex; align-items:center; gap:8px; background:var(--accent-glow); color:var(--accent-dim); border:1px solid var(--accent); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:13.5px; font-weight:600;}
+.year-notice .icon{width:16px; height:16px; flex-shrink:0; stroke:currentColor;}
+[data-theme="dark"] .year-notice{color:var(--accent);}
 .card .note{margin-top:10px; padding:9px 11px; background:var(--panel-2); border-left:2px solid var(--accent-2);
   border-radius:6px; font-size:12.5px; color:var(--text-dim); font-style:italic;}
 .card .actions{margin-top:13px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
@@ -877,11 +882,23 @@ function removeBookmark(key){
 function updateBmCount(){ document.getElementById('bmCount').textContent = getBookmarks().length; }
 updateBmCount();
 
-function getHistory(){ try{ return JSON.parse(localStorage.getItem('grips_history') || '[]'); }catch(e){ return []; } }
+// History is kept for the last 30 days (and capped), so it stays a useful
+// "recent searches" list instead of growing forever. Users can also clear it.
+const HISTORY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const HISTORY_MAX_ITEMS = 100;
+function pruneHistory(list){
+  const now = Date.now();
+  return list.filter(h => !h.ts || (now - h.ts) <= HISTORY_MAX_AGE_MS).slice(0, HISTORY_MAX_ITEMS);
+}
+function getHistory(){ try{ return pruneHistory(JSON.parse(localStorage.getItem('grips_history') || '[]')); }catch(e){ return []; } }
 function addHistory(entry){
-  const list = getHistory();
+  entry.ts = Date.now();
+  let list = getHistory();
+  // Collapse an immediately-repeated identical search so history stays clean.
+  list = list.filter(h => !(h.kw === entry.kw && (h.year||'') === (entry.year||'') && h.scope === entry.scope));
   list.unshift(entry);
-  localStorage.setItem('grips_history', JSON.stringify(list.slice(0,40)));
+  list = pruneHistory(list);
+  localStorage.setItem('grips_history', JSON.stringify(list));
   fetch('/api/history', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ syncCode: getSyncCode(), entry })
@@ -991,6 +1008,24 @@ function highlightMatches(escapedText, words){
   });
   return result;
 }
+
+// Highlight the searched keywords AND Pakistan place-names in one pass, so a
+// result visibly shows WHY it qualified as Pakistan-focused. Single regex pass
+// (never nested <mark>): Pakistan terms are listed first so they win on overlap.
+const PK_HIGHLIGHT_TERMS = [
+  'khyber pakhtunkhwa','khyber-pakhtunkhwa','gilgit-baltistan','gilgit baltistan',
+  'azad kashmir','indus basin','indus river','indus delta','pakistani','pakistan',
+  'islamabad','karachi','lahore','peshawar','quetta','multan','faisalabad',
+  'rawalpindi','sindh','punjab','balochistan','baluchistan'
+];
+function highlightAll(escapedText, kwWords){
+  if(!escapedText) return escapedText;
+  const parts = PK_HIGHLIGHT_TERMS.map(escapeRegex).concat((kwWords||[]).map(escapeRegex));
+  if(parts.length === 0) return escapedText;
+  const re = new RegExp('(' + parts.join('|') + ')', 'gi');
+  const pkSet = new Set(PK_HIGHLIGHT_TERMS.map(t => t.toLowerCase()));
+  return escapedText.replace(re, m => pkSet.has(m.toLowerCase()) ? `<mark class="pk">${m}</mark>` : `<mark>${m}</mark>`);
+}
 const STOPWORDS = new Set(['the','a','an','of','in','on','for','and','to','with','by','from','at','is','are','vs','using','based','via']);
 function getHighlightWords(rawKw){
   return (rawKw||'').toLowerCase().replace(/["']/g,'').split(/\s+/).filter(w => w.length > 1 && !STOPWORDS.has(w) && !/^(19|20)\d{2}$/.test(w));
@@ -1075,6 +1110,22 @@ async function callSearchApi(){
 
 function buildEffectiveQuery(kw){ return kw.trim(); }
 
+async function fetchWithPkExpand(){
+  let batch = await callSearchApi();
+  // Pakistan-only mode: a single page of generic-topic results often contains
+  // very few Pakistan-specific matches. Auto-expand a few more pages before
+  // giving up, so real matches buried deeper in the ranking aren't missed.
+  let expandAttempts = 0;
+  while(searchState.scope === 'pk' && batch.length < 12 && expandAttempts < 4 && searchState.hasMore){
+    expandAttempts++;
+    statusEl.textContent = `Expanding search to find more Pakistan-specific matches (pass ${expandAttempts + 1})...`;
+    const more = await callSearchApi();
+    if(more.length === 0 && !searchState.hasMore) break;
+    batch = batch.concat(more);
+  }
+  return batch;
+}
+
 async function runSearch(fromHistory){
   let kw = kwInput.value.trim();
   let yrRaw = fAnyYear.checked ? '' : yrInput.value.trim();
@@ -1108,18 +1159,23 @@ async function runSearch(fromHistory){
   currentPapers = [];
 
   try{
-    let batch = await callSearchApi();
+    let batch = await fetchWithPkExpand();
+    let yearNotice = '';
 
-    // Pakistan-only mode: a single page of generic-topic results often contains
-    // very few Pakistan-specific matches. Auto-expand a few more pages before
-    // giving up, so real matches buried deeper in the ranking aren't missed.
-    let expandAttempts = 0;
-    while(currentScope === 'pk' && batch.length < 12 && expandAttempts < 4 && searchState.hasMore){
-      expandAttempts++;
-      statusEl.textContent = `Expanding search to find more Pakistan-specific matches (pass ${expandAttempts + 1})...`;
-      const more = await callSearchApi();
-      if(more.length === 0 && !searchState.hasMore) break;
-      batch = batch.concat(more);
+    // Year auto-widen: the exact year had no matches, but the topic may well
+    // have papers in other years. Re-run ignoring the year and show those, with
+    // a clear notice of which years are actually available.
+    if(batch.length === 0 && yrRaw && !fAnyYear.checked){
+      statusEl.textContent = `No papers for ${yrRaw} — looking in other years...`;
+      searchState = { kw, displayKw: kw, year: '', scope: currentScope, apiState: null, hasMore: false };
+      const widened = await fetchWithPkExpand();
+      if(widened.length){
+        batch = widened;
+        const yrs = [...new Set(widened.map(p => p.year).filter(Boolean))].sort((a,b) => a - b);
+        const yrList = yrs.slice(0,10).join(', ') + (yrs.length > 10 ? '…' : '');
+        yearNotice = `No papers found for <strong>${escapeHtml(yrRaw)}</strong>. Showing results from other years instead${yrs.length ? ' — available: <strong>' + yrList + '</strong>' : ''}.`;
+        toast(`No ${yrRaw} papers — showing other years instead`);
+      }
     }
 
     btn.disabled = false;
@@ -1135,10 +1191,11 @@ async function runSearch(fromHistory){
     }
 
     currentPapers = batch;
-    statusEl.textContent = `${currentPapers.length} results for "${kw}"${yrRaw ? ' · ' + yrRaw : ''} ${currentScope==='pk' ? '· Pakistan-focused' : '· Global'} (all connected sources, deduped)`;
+    const shownYear = yearNotice ? '' : yrRaw;
+    statusEl.textContent = `${currentPapers.length} results for "${kw}"${shownYear ? ' · ' + shownYear : ''} ${currentScope==='pk' ? '· Pakistan-focused' : '· Global'} (all connected sources, deduped)`;
     exportRow.style.display = 'flex';
     renderChart(currentPapers);
-    resultsEl.innerHTML = currentPapers.map(p => renderCard(p, false, getHighlightWords(searchState.displayKw))).join('');
+    resultsEl.innerHTML = (yearNotice ? `<div class="year-notice"><svg class="icon"><use href="#i-clock"/></svg><span>${yearNotice}</span></div>` : '') + currentPapers.map(p => renderCard(p, false, getHighlightWords(searchState.displayKw))).join('');
     attachCardHandlers(resultsEl, currentPapers);
     maybeShowLoadMore();
 
@@ -1183,9 +1240,9 @@ function renderCard(p, showRemove, highlightWords){
   const authors = p.authors || 'Unknown authors';
   const link = p.url || p.oaUrl || (p.doi ? `https://doi.org/${p.doi}` : null);
   const abstractEscaped = p.abstract ? escapeHtml(p.abstract) : 'No abstract available.';
-  const abstract = p.abstract ? highlightMatches(abstractEscaped, highlightWords) : abstractEscaped;
+  const abstract = p.abstract ? highlightAll(abstractEscaped, highlightWords) : abstractEscaped;
   const titleEscaped = escapeHtml(p.title);
-  const titleHtml = highlightMatches(titleEscaped, highlightWords);
+  const titleHtml = highlightAll(titleEscaped, highlightWords);
   const bookmarked = isBookmarked(p.key);
   return `
     <div class="card" data-key="${p.key}">
@@ -1242,7 +1299,10 @@ function attachCardHandlers(container, papers){
           removeBookmark(key);
           toast('Removed from bookmarks');
         } else {
-          showCollectionModal(paper);
+          // One-click save — instant, no popup. Saved to "General"; papers can be
+          // organised into collections from the Bookmarks tab.
+          saveBookmark(paper, 'General');
+          toast('Saved to Bookmarks');
         }
         refreshStarStates();
       });
