@@ -391,7 +391,7 @@ footer a:hover{text-decoration:underline;}
 
 <header>
   <div class="headrow">
-    <a href="/" class="logo" aria-label="GRIPS Home">
+    <a href="#view-search" class="logo" aria-label="GRIPS Home" onclick="document.querySelector('nav.tabs button[data-view=\"search\"]').click(); window.scrollTo({top:0,behavior:'smooth'}); return false;">
       <img src="grips-logo.svg" class="header-logo light-logo" alt="GRIPS — Geospatial Research Index of Pakistan Studies">
       <img src="grips-logo-dark.svg" class="header-logo dark-logo" alt="GRIPS — Geospatial Research Index of Pakistan Studies">
     </a>
