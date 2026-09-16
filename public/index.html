@@ -68,6 +68,12 @@ svg.icon.fill{fill:currentColor;}
 #splash h1 span{background:linear-gradient(90deg,#E2AC55,#5AA0E6); -webkit-background-clip:text; background-clip:text; color:transparent;}
 #splash .tag{color:#8CA697; font-size:12.5px; font-family:'IBM Plex Mono', monospace; letter-spacing:0.04em;}
 #splash .ur{color:#E2AC55; font-size:22px;}
+#splash{padding-left:20px; padding-right:20px; box-sizing:border-box; text-align:center;}
+#splash .tag{max-width:100%;}
+@media (max-width:520px){
+  #splash h1{font-size:22px;}
+  #splash .tag{font-size:10px; letter-spacing:0.02em;}
+}
 
 /* ---------- Header / nav ---------- */
 header{position:sticky; top:0; z-index:20; background:var(--panel-glass); backdrop-filter:blur(14px) saturate(1.4);
@@ -94,6 +100,15 @@ nav.tabs{margin:0; display:flex; gap:4px; padding:3px; overflow-x:auto;
   .headrow{flex-wrap:wrap;}
   .headright{width:100%; justify-content:flex-end;}
   nav.tabs{flex:1 1 auto;}
+}
+@media (max-width:600px){
+  .headright{gap:8px;}
+  nav.tabs{width:100%; flex:1 1 auto;}
+  nav.tabs button{flex:1 1 0; min-width:0; padding:8px 4px; font-size:11.5px; gap:4px; justify-content:center;}
+  nav.tabs button svg.icon{width:14px; height:14px; margin:0;}
+  nav.tabs button .count{padding:0 4px; font-size:9.5px;}
+  .logo-text .name{font-size:24px;}
+  .logo-text .full{font-size:12px;}
 }
 nav.tabs button{
   background:transparent; border:none; color:var(--muted); display:flex; align-items:center; gap:6px;
@@ -1045,6 +1060,7 @@ kwInput.addEventListener('input', updateCrossLinks);
 updateCrossLinks();
 
 let currentPapers = [];
+let lastYearWidened = false; // true when the last search auto-widened past the typed year
 // Everything about pagination/dedup continuation now lives server-side in an
 // opaque `state` blob that /api/search returns and we just pass back unchanged
 // on "load more" — the client no longer talks to OpenAlex/S2/CrossRef/arXiv directly.
@@ -1157,6 +1173,7 @@ async function runSearch(fromHistory){
 
   searchState = { kw, displayKw: kw, year: yrRaw, scope: currentScope, apiState: null, hasMore: false };
   currentPapers = [];
+  lastYearWidened = false;
 
   try{
     let batch = await fetchWithPkExpand();
@@ -1174,6 +1191,7 @@ async function runSearch(fromHistory){
         const yrs = [...new Set(widened.map(p => p.year).filter(Boolean))].sort((a,b) => a - b);
         const yrList = yrs.slice(0,10).join(', ') + (yrs.length > 10 ? '…' : '');
         yearNotice = `No papers found for <strong>${escapeHtml(yrRaw)}</strong>. Showing results from other years instead${yrs.length ? ' — available: <strong>' + yrList + '</strong>' : ''}.`;
+        lastYearWidened = true;
         toast(`No ${yrRaw} papers — showing other years instead`);
       }
     }
@@ -1225,7 +1243,7 @@ async function loadMore(){
     currentPapers = currentPapers.concat(more);
     if(fSort.value === 'citations') currentPapers.sort((a,b) => (b.citations||0)-(a.citations||0));
     else if(fSort.value === 'year') currentPapers.sort((a,b) => (b.year||0)-(a.year||0));
-    statusEl.textContent = `${currentPapers.length} results for "${searchState.displayKw}"${yrInput.value.trim() && !fAnyYear.checked ? ' · ' + yrInput.value.trim() : ''} ${searchState.scope==='pk' ? '· Pakistan-focused' : '· Global'} (all connected sources, deduped)`;
+    statusEl.textContent = `${currentPapers.length} results for "${searchState.displayKw}"${yrInput.value.trim() && !fAnyYear.checked && !lastYearWidened ? ' · ' + yrInput.value.trim() : ''} ${searchState.scope==='pk' ? '· Pakistan-focused' : '· Global'} (all connected sources, deduped)`;
     renderChart(currentPapers);
     resultsEl.innerHTML = currentPapers.map(p => renderCard(p, false, getHighlightWords(searchState.displayKw))).join('');
     attachCardHandlers(resultsEl, currentPapers);
