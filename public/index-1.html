@@ -386,19 +386,10 @@ footer a:hover{text-decoration:underline;}
 
 <header>
   <div class="headrow">
-    <div class="logo">
-      <svg class="logo-mark" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" style="color:var(--line)" stroke-width="3"/>
-        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="80 250" stroke-linecap="round"/>
-        <circle cx="50" cy="50" r="6" fill="var(--accent)"/>
-        <circle cx="78" cy="28" r="4" fill="var(--accent-2)"/>
-      </svg>
-      <div class="logo-text">
-        <div class="name"><span class="hl">GRIPS</span></div>
-        <div class="full">Geospatial Research Index of Pakistan Studies</div>
-        <div class="sub">SEARCH · SCAN · CITE</div>
-      </div>
-    </div>
+    <a href="/" class="logo" aria-label="GRIPS Home">
+      <img src="grips-logo.svg" class="header-logo light-logo" alt="GRIPS — Geospatial Research Index of Pakistan Studies">
+      <img src="grips-logo-dark.svg" class="header-logo dark-logo" alt="GRIPS — Geospatial Research Index of Pakistan Studies">
+    </a>
     <div class="headright">
       <nav class="tabs" role="tablist">
         <button data-view="search" class="active" role="tab"><svg class="icon"><use href="#i-search"/></svg> Search</button>
