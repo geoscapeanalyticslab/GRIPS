@@ -295,6 +295,8 @@ mark.pk{background:#0f7b52; color:#fff; border-radius:3px; padding:0 3px; font-w
   box-shadow:var(--shadow-sm); line-height:1.8; font-size:16px;}
 .about-card h3{margin-top:0; font-size:15px; font-family:'Sora', sans-serif; color:var(--accent); display:flex; align-items:center; gap:8px;}
 .about-card .disclaimer{font-size:12.5px; color:var(--muted); border-left:2px solid var(--warn); padding:8px 12px; margin-top:10px; background:var(--panel-2); border-radius:0 6px 6px 0;}
+.citation-box{font-family:'IBM Plex Mono', monospace; font-size:13px; line-height:1.7; color:var(--text-dim);
+  background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:14px 16px; margin:10px 0;}
 
 footer{max-width:none; margin:0; padding:20px clamp(16px,3vw,40px) 30px; color:var(--muted); font-family:'IBM Plex Mono', monospace; font-size:12.5px; text-align:center; line-height:1.7;}
 footer a{color:var(--accent); text-decoration:none; font-weight:600;}
@@ -302,6 +304,7 @@ footer a:hover{text-decoration:underline;}
 .footer-feedback{margin-bottom:11px; font-size:15px; line-height:1.5; font-family:inherit;}
 .footer-feedback a{font-size:15.5px;}
 .gsal-link{font-size:15px; font-weight:700;}
+.footer-cite{margin-bottom:11px; font-size:14px; line-height:1.5; font-family:inherit;}
 
 .fab-report{position:fixed; bottom:22px; left:22px; z-index:65; background:var(--panel); color:var(--text);
   border:1px solid var(--line); border-radius:24px; padding:11px 18px 11px 15px; font-size:13px; font-weight:600;
@@ -546,6 +549,16 @@ footer a:hover{text-decoration:underline;}
       <h3><svg class="icon"><use href="#i-globe"/></svg> About GRIPS</h3>
       <p>GRIPS (Geospatial Research Index of Pakistan Studies) is a free literature-discovery tool built for Pakistani GIS, remote sensing, earth &amp; environmental science, geography, and space science researchers and students. Give it keywords and a year (or year range), and it pulls live results from open academic databases, no login, no paywall to search.</p>
     </div>
+    <div class="about-card" id="about-cite">
+      <h3><svg class="icon"><use href="#i-star"/></svg> Cite GRIPS</h3>
+      <p>GRIPS is free to use, and free to stay free depends partly on it being cited. If it helped your research, please cite it:</p>
+      <div class="citation-box" id="citationText">Habib, H., Mehdi, M., Tipu, H. M. B., Bano Bukhari, S. S., Komal, I., Sarwar, N., &amp; Ahmad, A. (2026). GRIPS: Geospatial Research Index of Pakistan Studies (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.22807356</div>
+      <div class="modal-actions" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
+        <button class="ghost" id="copyCitation"><svg class="icon"><use href="#i-copy"/></svg> Copy citation</button>
+        <a class="ghost" href="https://doi.org/10.5281/zenodo.22807356" target="_blank" rel="noopener"><svg class="icon"><use href="#i-external"/></svg> View on Zenodo</a>
+        <a class="ghost" href="https://github.com/geoscapeanalyticslab/GRIPS/blob/main/CITATION.cff" target="_blank" rel="noopener"><svg class="icon"><use href="#i-link"/></svg> BibTeX / CITATION.cff</a>
+      </div>
+    </div>
     <div class="about-card" id="about-gsal">
       <h3><svg class="icon"><use href="#i-globe"/></svg> About GeoScape Analytics Lab (GSAL)</h3>
       <p>GRIPS is a project of <strong>GeoScape Analytics Lab (GSAL)</strong>, an independent geospatial research lab based in Lahore, Pakistan. GSAL specializes in advanced geospatial technologies &mdash; applying GIS, remote sensing, artificial intelligence, and spatial data analytics to real-world challenges in environmental management, urban planning, agriculture, and climate.</p>
@@ -597,6 +610,7 @@ footer a:hover{text-decoration:underline;}
 
 <footer>
   <div class="footer-feedback">Found a problem, a missing paper, or have a suggestion? <a href="mailto:geoscapeanalyticslab@gmail.com?subject=GRIPS%20Feedback%20%2F%20Issue">Email us at geoscapeanalyticslab@gmail.com</a></div>
+  <div class="footer-cite">If GRIPS helped your research, please <a href="#" class="filter-about" data-about="about-cite">cite it</a> — DOI: <a href="https://doi.org/10.5281/zenodo.22807356" target="_blank" rel="noopener">10.5281/zenodo.22807356</a></div>
   GRIPS · a project of <a class="gsal-link" href="https://geoscapeanalyticslab.github.io/?p=projects" target="_blank" rel="noopener noreferrer">GeoScape Analytics Lab (GSAL)</a> · <a href="#" class="filter-about" data-about="about-sources">data via OpenAlex, Semantic Scholar, CrossRef, arXiv &amp; more</a> · Made in Pakistan
 </footer>
 
@@ -666,6 +680,15 @@ document.querySelectorAll('.filter-about').forEach(el => {
     }
   });
 });
+
+/* ================= CITE GRIPS ================= */
+const copyCitationBtn = document.getElementById('copyCitation');
+if(copyCitationBtn){
+  copyCitationBtn.addEventListener('click', () => {
+    const text = document.getElementById('citationText').textContent.trim();
+    navigator.clipboard.writeText(text).then(() => toast('Citation copied')).catch(() => toast('Copy failed'));
+  });
+}
 
 /* ================= TOAST (with optional undo) ================= */
 let toastTimer = null;
