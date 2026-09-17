@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use GRIPS in your research, please cite it as below."
+title: "GRIPS: Geospatial Research Index of Pakistan Studies"
+type: software
+authors:
+  - given-names: Hamna
+    family-names: Habib
+    affiliation: "GeoScape Analytics Lab, Institute of Geography, University of the Punjab"
+  - given-names: Muhammad
+    family-names: Mehdi
+    affiliation: "GeoScape Analytics Lab, Institute of Geography, University of the Punjab"
+  - given-names: Hafiz Muhammad Bilal
+    family-names: Tipu
+    affiliation: "GeoScape Analytics Lab, Institute of Geography, University of the Punjab"
+  - given-names: Syeda Sadia
+    family-names: Bano Bukhari
+    affiliation: "GeoScape Analytics Lab, Institute of Geography, University of the Punjab"
+  - given-names: Iqra
+    family-names: Komal
+    affiliation: "GeoScape Analytics Lab, Institute of Geography, University of the Punjab"
+  - given-names: Nimra
+    family-names: Sarwar
+    affiliation: "GeoScape Analytics Lab, Institute of Geography, University of the Punjab"
+  - given-names: Adeel
+    family-names: Ahmad
+    affiliation: "Institute of Geography, University of the Punjab"
+    orcid: "https://orcid.org/0000-0002-1211-1184"
+repository-code: "https://github.com/geoscapeanalyticslab/GRIPS"
+url: "https://grips-gsal.netlify.app"
+abstract: >
+  GRIPS is a Pakistan-focused academic literature search platform for GIS,
+  remote sensing, and Earth science research, aggregating and disambiguating
+  results from OpenAlex, Semantic Scholar, CrossRef, arXiv, Unpaywall, and
+  other sources.
+keywords:
+  - GIS
+  - remote sensing
+  - Pakistan
+  - geospatial
+  - literature search
+license: MIT
+version: 1.0.0
+date-released: "2026-09-16"
