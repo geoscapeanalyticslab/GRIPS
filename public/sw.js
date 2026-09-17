@@ -1,4 +1,4 @@
-const CACHE = 'grips-shell-v20';
+const CACHE = 'grips-shell-v22';
 const SHELL_FILES = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', event => {
@@ -17,7 +17,7 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  if(url.hostname.includes('semanticscholar.org') || url.hostname.includes('crossref.org')){
+  if(url.hostname.includes('semanticscholar.org') || url.hostname.includes('crossref.org') || url.hostname.includes('googletagmanager.com') || url.hostname.includes('google-analytics.com') || url.hostname.includes('analytics.google.com')){
     return;
   }
   event.respondWith(

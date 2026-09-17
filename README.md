@@ -1,9 +1,18 @@
 # GRIPS — Backend Edition
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22807356.svg)](https://doi.org/10.5281/zenodo.22807356)
+
+**GRIPS** (Geospatial Research Index of Pakistan Studies) is a Pakistan-focused
+academic literature search platform for GIS, remote sensing, and Earth
+science research, built by [GeoScape Analytics Lab (GSAL)](https://geoscapeanalyticslab.github.io/),
+Institute of Geography, University of the Punjab.
+
 This is the full-backend version of GRIPS. The frontend (`public/index.html`)
 is the exact same tested app you already had — it now talks to a Next.js backend
 instead of calling OpenAlex/Semantic Scholar/CrossRef/arXiv/Unpaywall directly
 from the browser.
+
+**Live app:** https://grips-gsal.netlify.app
 
 ## What changed vs. the single-HTML version
 
@@ -69,3 +78,29 @@ netlify dev                        # provides a local Netlify Blobs context
   with your lab director whether University of Punjab has an HEC-backed
   institutional subscription, and whether requests need to come from a
   campus IP/VPN.
+
+## Data sources & third-party terms
+
+GRIPS aggregates metadata from third-party sources, including OpenAlex,
+Semantic Scholar, CrossRef, arXiv, Unpaywall, and (as they're added) Springer
+Nature, IEEE Xplore, CORE, ScienceDirect, and NASA ADS. GRIPS itself is open
+source under the licence below, but the underlying metadata and full-text
+content remain subject to each source's own terms of service and licensing —
+GRIPS does not grant any rights to that underlying content beyond what each
+source already permits.
+
+## Citing GRIPS
+
+If you use GRIPS in your research, please cite it:
+
+> Habib, H., Mehdi, M., Tipu, H. M. B., Bano Bukhari, S. S., Komal, I., Sarwar, N., & Ahmad, A. (2026).
+> GRIPS: Geospatial Research Index of Pakistan Studies (v1.0.0). Zenodo.
+> https://doi.org/10.5281/zenodo.22807356
+
+See [`CITATION.cff`](./CITATION.cff) for BibTeX/APA export via GitHub's
+"Cite this repository" button.
+
+## License
+
+GRIPS is released under the [MIT License](./LICENSE) — see the `LICENSE` file
+for the full text.
